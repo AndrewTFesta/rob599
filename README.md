@@ -1,3 +1,3 @@
-# rob551
-ROB 551: Mobile Robotics (aka ROB 599)
-# rob599
+ROB 599: Mobile Robotics
+=====
+
