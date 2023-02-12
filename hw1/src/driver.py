@@ -49,7 +49,8 @@ def callback(scan):
         publisher.publish(t)
 
         # Print out a log message to the INFO channel to let us know it's working.
-        # rospy.loginfo(f'Published {t.linear.x}')
+        rospy.loginfo(f'Published {t.linear.x=}')
+        return
 
 
 if __name__ == '__main__':
