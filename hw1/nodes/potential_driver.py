@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Bill Smart, smartw@oregonstate.edu
 #
 # This example gives the robot callback based driver.
