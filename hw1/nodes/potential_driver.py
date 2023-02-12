@@ -52,6 +52,7 @@ def compute_vector(ranges, min_angle, max_angle, min_dist, max_dist, maintain_di
 
 # A callback to deal with the LaserScan messages.
 def callback(scan):
+    print(f'{scan.min_angle} | {scan.max_angle}')
     linear_speed = 0.5
     maintain_dist = 2
 
