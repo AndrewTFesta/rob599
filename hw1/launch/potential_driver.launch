@@ -1,0 +1,5 @@
+<launch>
+
+	<node pkg="hw1" type="potential_driver" name="potential_driver" output="screen" />
+
+</launch>
