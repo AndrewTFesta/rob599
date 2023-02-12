@@ -1,5 +1,5 @@
 <launch>
 
-	<node pkg="stage_ros" name="stage" type="stageros" args="$(find stage_osu)/config/empty.world" />
+	<node pkg="hw1" type="potential_driver" name="potential_driver" output="screen" />
 
 </launch>
