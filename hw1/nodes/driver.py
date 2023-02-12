@@ -54,6 +54,7 @@ def callback(scan):
 
 
 if __name__ == '__main__':
+        print(f'Started driver script')
         # Initialize the node, and call it "driver".
         rospy.init_node('driver', argv=sys.argv)
 

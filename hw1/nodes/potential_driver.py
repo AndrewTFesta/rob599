@@ -34,6 +34,7 @@ def compute_vector(ranges, min_angle, max_angle, min_dist, max_dist, maintain_di
     vector_sum += vector
 
     angle_correction = np.pi / 2
+    # todo limit range to angles in front of the robot
     for idx, dist in enumerate(ranges):
         angle = min_angle + (res * idx)
         angle += angle_correction
@@ -52,7 +53,7 @@ def compute_vector(ranges, min_angle, max_angle, min_dist, max_dist, maintain_di
 
 # A callback to deal with the LaserScan messages.
 def callback(scan):
-    print(f'{scan.min_angle} | {scan.max_angle}')
+    print(f'{scan.angle_min=} | {scan.angle_max=}')
     linear_speed = 0.5
     maintain_dist = 2
 
@@ -74,11 +75,12 @@ def callback(scan):
     publisher.publish(t)
 
     # Print out a log message to the INFO channel to let us know it's working.
-    rospy.loginfo(f'Published {t.linear.x=} | {t.angular.z=}')
+    # rospy.loginfo(f'Published {t=}')
     return
 
 
 if __name__ == '__main__':
+    print(f'Starting potential driver node')
     # Initialize the node, and call it "driver".
     rospy.init_node('driver', argv=sys.argv)
 
@@ -86,8 +88,9 @@ if __name__ == '__main__':
     publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     # Set up a subscriber.  The default topic for LaserScan messages is base_scan.
-    subscriber = rospy.Subscriber('base_scan', LaserScan, callback, queue_size=10)
+    subscriber = rospy.Subscriber('scan', LaserScan, callback, queue_size=10)
 
+    print('Time keeps on spinning...')
     # Now that everything is wired up, we just spin.
     rospy.spin()
 
