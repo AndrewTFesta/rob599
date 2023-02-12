@@ -49,10 +49,11 @@ def callback(scan):
         publisher.publish(t)
 
         # Print out a log message to the INFO channel to let us know it's working.
-        # rospy.loginfo(f'Published {t.linear.x}')
+        rospy.loginfo(f'Published {t.linear.x}')
 
 
 if __name__ == '__main__':
+        print(f'Started driver script')
         # Initialize the node, and call it "driver".
         rospy.init_node('driver', argv=sys.argv)
 
