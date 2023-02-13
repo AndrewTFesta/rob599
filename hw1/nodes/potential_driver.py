@@ -18,32 +18,35 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
 
-def compute_force(distance, charge=1.0, potential_constant=1.0):
-    potential = charge * potential_constant / ((distance ** 2) + 0.01)
+def compute_force(distance, potential_constant=1.0):
+    potential = potential_constant / ((distance ** 2) + 0.01)
     return potential
 
 
-def compute_vector(ranges, min_angle, max_angle, min_dist, max_dist, maintain_distance):
-    res = (max_angle - min_angle) / len(ranges)
+def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, maintain_distance, min_angle, max_angle):
+    potential_constant = 20
+    # res = (max_angle - min_angle) / len(ranges)
     vector_sum = np.array([0.0, 0.0])
 
     # this adds an "incentive" potential for the agent to want to go forward
     vector = np.array([np.cos(np.pi / 2), np.sin(np.pi / 2)])
-    potential = compute_force(0.1, potential_constant=1)
+    potential = compute_force(0.1, potential_constant=potential_constant)
     vector *= potential
     vector_sum += vector
 
     angle_correction = np.pi / 2
-    # todo limit range to angles in front of the robot
     for idx, dist in enumerate(ranges):
-        angle = min_angle + (res * idx)
-        angle += angle_correction
+        angle = initial_angle + (angle_resolution * idx)
         dist = min(max_dist, dist)
         dist = max(min_dist, dist)
-        if dist <= maintain_distance:
+
+        if min_angle <= angle <= max_angle and dist <= maintain_distance:
+        # if dist <= maintain_distance:
+            angle += angle_correction
             vector = np.array([np.cos(angle), np.sin(angle)])
 
-            potential = -1 * compute_force(dist, potential_constant=1)
+            potential = -1 * compute_force(dist, potential_constant=potential_constant)
+            vector *= 1 / dist
             vector *= potential
             vector_sum += vector
 
@@ -53,11 +56,12 @@ def compute_vector(ranges, min_angle, max_angle, min_dist, max_dist, maintain_di
 
 # A callback to deal with the LaserScan messages.
 def callback(scan):
-    print(f'{scan.angle_min=} | {scan.angle_max=}')
+    # print(f'{scan.angle_min=} | {scan.angle_max=}')
     linear_speed = 0.5
     maintain_dist = 2
+    scan_width = np.pi / 4
 
-    vector = compute_vector(scan.ranges, scan.angle_min, scan.angle_max, scan.range_min, scan.range_max, maintain_dist)
+    vector = compute_vector(scan.ranges, scan.angle_min, scan.angle_increment, scan.range_min, scan.range_max, maintain_dist, -scan_width / 2, scan_width / 2)
 
     t = Twist()
     t.linear.x = linear_speed
@@ -75,7 +79,7 @@ def callback(scan):
     publisher.publish(t)
 
     # Print out a log message to the INFO channel to let us know it's working.
-    # rospy.loginfo(f'Published {t=}')
+    rospy.loginfo(f'Published {t=}')
     return
 
 
@@ -88,7 +92,7 @@ if __name__ == '__main__':
     publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     # Set up a subscriber.  The default topic for LaserScan messages is base_scan.
-    subscriber = rospy.Subscriber('scan', LaserScan, callback, queue_size=10)
+    subscriber = rospy.Subscriber('base_scan', LaserScan, callback, queue_size=10)
 
     print('Time keeps on spinning...')
     # Now that everything is wired up, we just spin.
