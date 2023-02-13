@@ -48,7 +48,7 @@ def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, 
             vector = np.array([np.cos(angle), np.sin(angle)])
 
             potential = -1 * compute_force(dist, potential_constant=potential_constant)
-            vector *= 1 / dist
+            vector *= 1 / (dist + 0.01)
             vector *= potential
             vector_sum += vector
 
@@ -116,6 +116,7 @@ if __name__ == '__main__':
 
     # Set up a subscriber.  The default topic for LaserScan messages is base_scan.
     subscriber = rospy.Subscriber('base_scan', LaserScan, laser_callback, queue_size=10)
+    subscriber = rospy.Subscriber('scan', LaserScan, laser_callback, queue_size=10)
 
     print('Time keeps on spinning...')
     # Now that everything is wired up, we just spin.

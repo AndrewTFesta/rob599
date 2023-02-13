@@ -25,6 +25,7 @@ def callback(scan):
     linear_speed = 0.5
     turn_speed = 2
     min_distance = 1
+    num_detect = 1
     scan_width = 10
 
     # Every time we get a laser scan, calculate the shortest scan distance, and set
@@ -42,7 +43,9 @@ def callback(scan):
     t.angular.z = 0
 
     count_above = sum(each_val <= min_distance for each_val in vals)
-    DETECT_THRESHOLD -= count_above
+    if count_above >= num_detect:
+        DETECT_THRESHOLD -= 1
+
     if DETECT_THRESHOLD <= 0:
         # stop
         t.linear.x = 0
@@ -78,6 +81,7 @@ if __name__ == '__main__':
 
     # Set up a subscriber.  The default topic for LaserScan messages is base_scan.
     subscriber = rospy.Subscriber('base_scan', LaserScan, callback, queue_size=10)
+    subscriber = rospy.Subscriber('scan', LaserScan, callback, queue_size=10)
 
     # Now that everything is wired up, we just spin.
     rospy.spin()
