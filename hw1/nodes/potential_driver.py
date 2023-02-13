@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import argparse
+from functools import partial
 
 # Bill Smart, smartw@oregonstate.edu
 #
@@ -40,8 +42,8 @@ def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, 
         dist = min(max_dist, dist)
         dist = max(min_dist, dist)
 
-        if min_angle <= angle <= max_angle and dist <= maintain_distance:
-        # if dist <= maintain_distance:
+        # if min_angle <= angle <= max_angle and dist <= maintain_distance:
+        if dist <= maintain_distance:
             angle += angle_correction
             vector = np.array([np.cos(angle), np.sin(angle)])
 
@@ -55,13 +57,13 @@ def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, 
 
 
 # A callback to deal with the LaserScan messages.
-def callback(scan):
-    # print(f'{scan.angle_min=} | {scan.angle_max=}')
+def callback(scan, fudge_factor, store_scan, store_len):
     linear_speed = 0.5
     maintain_dist = 2
     scan_width = np.pi / 4
 
     vector = compute_vector(scan.ranges, scan.angle_min, scan.angle_increment, scan.range_min, scan.range_max, maintain_dist, -scan_width / 2, scan_width / 2)
+    print(vector)
 
     t = Twist()
     t.linear.x = linear_speed
@@ -73,26 +75,47 @@ def callback(scan):
     # if the x component is pushing the robot to the right (positive force), then the robot
     # should turn to the right (negative theta)
     # using the x component of the vector also scales the turn by the magnitude of the force
-    t.angular.z = -1 * vector[0]
+    turn_amount = -1 * vector[0]
+    turn_amount += fudge_factor
+    t.angular.z = turn_amount
 
     # Send the command to the robot.
     publisher.publish(t)
 
     # Print out a log message to the INFO channel to let us know it's working.
-    rospy.loginfo(f'Published {t=}')
-    return
+    # rospy.loginfo(f'Published {t=}')
+    store_scan.append(scan)
+    store_scan = store_scan[-store_len:]
+    return store_scan
 
 
 if __name__ == '__main__':
     print(f'Starting potential driver node')
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--fudge_factor', default=0, type=int, action='store', required=False)
+    parser.add_argument('--store_len', default=10, type=int, action='store', required=False)
+
+    args, unknown_args = parser.parse_known_args()
+    var_args = vars(args)
+    fudge_factor = var_args.get('fudge_factor', 0)
+    store_len = var_args.get('store_len', 10)
+
+    print(f'--------------------')
+    print(f'{args=}')
+    print(f'{unknown_args=}')
+    print(f'--------------------')
+
     # Initialize the node, and call it "driver".
     rospy.init_node('driver', argv=sys.argv)
+
+    print(f'{fudge_factor=} | {store_len=}')
+    laser_callback = partial(callback, fudge_factor=fudge_factor, store_scan=[], store_len=store_len)
 
     # Set up a publisher.  The default topic for Twist messages is cmd_vel.
     publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     # Set up a subscriber.  The default topic for LaserScan messages is base_scan.
-    subscriber = rospy.Subscriber('base_scan', LaserScan, callback, queue_size=10)
+    subscriber = rospy.Subscriber('base_scan', LaserScan, laser_callback, queue_size=10)
 
     print('Time keeps on spinning...')
     # Now that everything is wired up, we just spin.

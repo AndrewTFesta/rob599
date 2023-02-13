@@ -1,5 +1,8 @@
 <launch>
+  <arg name="detect_threshold" default="10" />
 
-	<node pkg="hw1" type="potential_driver" name="potential_driver" output="screen" />
+  # start this node with a similar syntax as below
+  # roslaunch hw1 potential_driver.launch detect_threshold:=10
+  <node pkg="hw1" type="driver.py" name="driver_auto" output="screen" args="--detect_threshold $(arg detect_threshold)"/>
 
 </launch>
