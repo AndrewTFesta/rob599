@@ -1,8 +1,9 @@
 <launch>
-  <arg name="detect_threshold" default="10" />
+  <arg name="scans_detect" default="10" />
+  <arg name="readings_detect" default="10" />
 
   # start this node with a similar syntax as below
-  # roslaunch hw1 potential_driver.launch detect_threshold:=10
-  <node pkg="hw1" type="driver.py" name="driver_auto" output="screen" args="--detect_threshold $(arg detect_threshold)"/>
+  # roslaunch hw1 driver.launch scans_detect:=10
+  <node pkg="hw1" type="driver.py" name="driver_auto" output="screen" args="--scans_detect $(arg scans_detect) --readings_detect $(arg readings_detect)"/>
 
 </launch>

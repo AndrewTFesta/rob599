@@ -25,7 +25,20 @@ def compute_force(distance, potential_constant=1.0):
     return potential
 
 
-def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, maintain_distance, min_angle, max_angle):
+def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, maintain_distance):
+    """
+    Computes the vector field surrounding the robot based on the range of distance readings surrounding the robot.
+
+    :param ranges:
+    :param initial_angle:
+    :param angle_resolution:
+    :param min_dist:
+    :param max_dist:
+    :param maintain_distance:
+    :param min_angle:
+    :param max_angle:
+    :return:
+    """
     potential_constant = 20
     # res = (max_angle - min_angle) / len(ranges)
     vector_sum = np.array([0.0, 0.0])
@@ -42,7 +55,6 @@ def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, 
         dist = min(max_dist, dist)
         dist = max(min_dist, dist)
 
-        # if min_angle <= angle <= max_angle and dist <= maintain_distance:
         if dist <= maintain_distance:
             angle += angle_correction
             vector = np.array([np.cos(angle), np.sin(angle)])
@@ -58,11 +70,22 @@ def compute_vector(ranges, initial_angle, angle_resolution, min_dist, max_dist, 
 
 # A callback to deal with the LaserScan messages.
 def callback(scan, fudge_factor, store_scan, store_len):
+    """
+    Handles receiving a laser scan. More information on this data type can be found at the link below.
+
+    http://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/LaserScan.html
+
+    :param scan:            a single laser scan
+    :param fudge_factor:    allows for biasing the turning of the robot in one direction or another. a positive value
+                            will push the robot to turn left and a negative value will push the robot to turn right.
+    :param store_scan:      a list where this scan can be saved (for persistence)
+    :param store_len:       the maximum number of scans to store in store_scan
+    :return:
+    """
     linear_speed = 0.5
     maintain_dist = 2
-    scan_width = np.pi / 4
 
-    vector = compute_vector(scan.ranges, scan.angle_min, scan.angle_increment, scan.range_min, scan.range_max, maintain_dist, -scan_width / 2, scan_width / 2)
+    vector = compute_vector(scan.ranges, scan.angle_min, scan.angle_increment, scan.range_min, scan.range_max, maintain_dist)
     print(vector)
 
     t = Twist()
@@ -103,22 +126,21 @@ if __name__ == '__main__':
     print(f'--------------------')
     print(f'{args=}')
     print(f'{unknown_args=}')
+    print(f'{fudge_factor=} | {store_len=}')
     print(f'--------------------')
 
     # Initialize the node, and call it "driver".
     rospy.init_node('driver', argv=sys.argv)
 
-    print(f'{fudge_factor=} | {store_len=}')
     laser_callback = partial(callback, fudge_factor=fudge_factor, store_scan=[], store_len=store_len)
 
     # Set up a publisher.  The default topic for Twist messages is cmd_vel.
     publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     # Set up a subscriber.  The default topic for LaserScan messages is base_scan.
-    subscriber = rospy.Subscriber('base_scan', LaserScan, laser_callback, queue_size=10)
-    subscriber = rospy.Subscriber('scan', LaserScan, laser_callback, queue_size=10)
+    _ = rospy.Subscriber('base_scan', LaserScan, laser_callback, queue_size=10)
+    _ = rospy.Subscriber('scan', LaserScan, laser_callback, queue_size=10)
 
     print('Time keeps on spinning...')
     # Now that everything is wired up, we just spin.
     rospy.spin()
-
