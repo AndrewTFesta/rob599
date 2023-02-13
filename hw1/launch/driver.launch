@@ -1,9 +1,9 @@
 <launch>
-  <arg name="scans_detect" default="10" />
+  <arg name="scans_detect" default="1" />
   <arg name="readings_detect" default="10" />
 
   # start this node with a similar syntax as below
-  # roslaunch hw1 driver.launch scans_detect:=10
+  # roslaunch hw1 driver.launch scans_detect:=10 readings_detect:=10
   <node pkg="hw1" type="driver.py" name="driver_auto" output="screen" args="--scans_detect $(arg scans_detect) --readings_detect $(arg readings_detect)"/>
 
 </launch>

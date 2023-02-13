@@ -80,11 +80,12 @@ def callback(scan, store_scan, readings_detect, scans_detect):
 if __name__ == '__main__':
     print(f'Starting driver node')
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--scans_detect', default=10, type=int, action='store', required=False)
+    parser.add_argument('--scans_detect', default=1, type=int, action='store', required=False)
+    parser.add_argument('--readings_detect', default=10, type=int, action='store', required=False)
 
     args, unknown_args = parser.parse_known_args()
     var_args = vars(args)
-    scans_detect = var_args.get('scans_detect', 10)
+    scans_detect = var_args.get('scans_detect', 1)
     readings_detect = var_args.get('readings_detect', 10)
 
     print(f'--------------------')
